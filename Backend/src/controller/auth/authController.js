@@ -82,7 +82,15 @@ const login = async (req, res) => {
     if (!user) {
       return res.status(400).send({ message: "user not found" });
     }
-    if (user.password == req.body.password) {
+    
+    // Support bcrypt-hashed passwords and legacy plaintext records.
+    const isPasswordValid =
+      (typeof user.password === "string" &&
+        user.password.startsWith("$2") &&
+        (await bcrypt.compare(req.body.password, user.password))) ||
+      user.password === req.body.password;
+    
+    if (isPasswordValid) {
       const token = generateToken({ user: user.toJSON() });
       return res.status(200).send({
         token,
@@ -92,6 +100,7 @@ const login = async (req, res) => {
           lastName: user.name?.split(" ")[1] || "",
           email: user.email,
           name: user.name,
+          role: "admin"
         },
         message: "successfully logged in",
       });

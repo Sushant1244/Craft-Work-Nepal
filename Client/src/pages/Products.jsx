@@ -3,6 +3,11 @@ import { ShoppingCart, Search, Loader } from "lucide-react";
 import axios from "axios";
 import "../styles/products.css";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:4000/api";
+const BACKEND_ORIGIN =
+  import.meta.env.VITE_BACKEND_ORIGIN || "http://localhost:4000";
+
 export default function Products({ onAddToCart }) {
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
@@ -25,11 +30,24 @@ export default function Products({ onAddToCart }) {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:4000/api/product");
-      console.log(response.data);
+      const response = await axios.get(`${API_BASE_URL}/product`);
+      const rawProducts = Array.isArray(response.data) ? response.data : [];
+      const normalized = rawProducts.map((p) => ({
+        ...p,
+        product_name: p.product_name || p.name || "Unnamed Product",
+        category:
+          typeof p.category === "string"
+            ? p.category.toLowerCase()
+            : p.category_name || "",
+        imageUrl: p.imageUrl
+          ? p.imageUrl.startsWith("http")
+            ? p.imageUrl
+            : `${BACKEND_ORIGIN}${p.imageUrl}`
+          : null,
+      }));
 
-      setProducts(response.data || []);
-      setFilteredProducts(response.data || []);
+      setProducts(normalized);
+      setFilteredProducts(normalized);
       setError(null);
     } catch (err) {
       setError("Failed to load products");
@@ -149,7 +167,13 @@ export default function Products({ onAddToCart }) {
                 <div key={product.id} className="product-card">
                   <div className="product-image">
                     {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.product_name} />
+                      <img
+                        src={product.imageUrl}
+                        alt={product.product_name}
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
                     ) : (
                       <div className="image-placeholder">No Image</div>
                     )}

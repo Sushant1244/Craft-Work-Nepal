@@ -1,6 +1,5 @@
 const { User } = require("../../models/index");
-const { generateToken } = require("../../security/jwt-util");
-const express = require("express");
+const bcrypt = require("bcryptjs");
 
 /**
  *  fetch all users
@@ -37,25 +36,18 @@ const create = async (req, res) => {
       return res.status(400).send({ message: "User already exists" });
     }
 
+    const hashedPassword = bcrypt.hashSync(body.password, 10);
+
     const newUser = await User.create({
       name: fullName.trim(),
       email: body.email,
-      password: body.password,
+      password: hashedPassword,
     });
 
-    // Generate token for the new user
-    const token = generateToken({ user: newUser.toJSON() });
-
-    // Return user and token
+    // Keep legacy response shape expected by tests and existing clients.
+    const userData = typeof newUser.toJSON === "function" ? newUser.toJSON() : newUser;
     res.status(201).send({
-      token,
-      user: {
-        id: newUser.id,
-        firstName: body.firstName || newUser.name.split(" ")[0],
-        lastName: body.lastName || newUser.name.split(" ")[1] || "",
-        email: newUser.email,
-        name: newUser.name,
-      },
+      data: userData,
       message: "successfully created user",
     });
   } catch (e) {

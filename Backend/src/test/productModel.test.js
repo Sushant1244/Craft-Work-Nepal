@@ -1,46 +1,44 @@
-const Sequelize = require("sequelize");
+const { Sequelize, DataTypes } = require("sequelize");
 require("dotenv").config();
 const express = require("express");
 
-const dbMock = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    dialect: "postgres",
-    logging: false,
-  }
-);
+const dbMock = new Sequelize("sqlite::memory:", {
+  logging: false,
+});
 
 const productMock = dbMock.define("product", {
   id: {
-    type: Sequelize.INTEGER,
+    type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   },
   product_name: {
-    type: Sequelize.STRING,
+    type: DataTypes.STRING,
     allowNull: false,
   },
   product_description: {
-    type: Sequelize.STRING,
+    type: DataTypes.STRING,
   },
   product_code: {
-    type: Sequelize.STRING,
+    type: DataTypes.STRING,
     allowNull: false,
   },
   product_price: {
-    type: Sequelize.DECIMAL,
+    type: DataTypes.DECIMAL,
     allowNull: false,
   },
   product_stock: {
-    type: Sequelize.INTEGER,
+    type: DataTypes.INTEGER,
     allowNull: false,
   },
 });
 
 beforeAll(async () => {
   await productMock.sync({ force: true });
+});
+
+afterAll(async () => {
+  await dbMock.close();
 });
 
 describe("Product Model", () => {
@@ -55,7 +53,7 @@ describe("Product Model", () => {
     expect(product.product_name).toBe("Product Name");
     expect(product.product_description).toBe("Product Description");
     expect(product.product_code).toBe("product code");
-    expect(product.product_price).toBe("2");
+    expect(Number(product.product_price)).toBe(2);
     expect(product.product_stock).toBe(5);
   });
 

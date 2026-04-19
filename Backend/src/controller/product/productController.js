@@ -32,9 +32,11 @@ const getProductByCategory = async (req, res) => {
       return {
         id: product.productId,
         name: product.product_name,
+        code: product.product_code,
         imageUrl: product.image ? `/uploads/${product.image.filename}` : null,
         stock: product.product_stock,
         price: product.product_price,
+        category: category,
         description: product.product_description,
       };
     });
@@ -107,11 +109,13 @@ const getAllProducts = async (req, res) => {
       return {
         id: product.productId,
         name: product.product_name,
+        code: product.product_code,
         imageUrl: product.image
           ? `http://localhost:4000/uploads/${product.image.filename}`
           : null,
         stock: product.product_stock,
         price: product.product_price,
+        category: product.categoryId,
         description: product.product_description,
       };
     });

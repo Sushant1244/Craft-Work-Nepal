@@ -1,22 +1,33 @@
 const { User } = require("../models/user/User");
-const Sequelize = require("sequelize");
+const { Sequelize, DataTypes } = require("sequelize");
 const express = require("express");
 require("dotenv").config();
 
-const dbMock = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
-  {
-    dialect: "postgres",
-    logging: false,
-  }
-);
+const dbMock = new Sequelize("sqlite::memory:", {
+  logging: false,
+});
 
 const userMock = dbMock.define("User", {
-  name: "test name",
-  email: "test email",
-  password: "test password",
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+});
+
+beforeAll(async () => {
+  await userMock.sync({ force: true });
+});
+
+afterAll(async () => {
+  await dbMock.close();
 });
 
 describe("User Model", () => {

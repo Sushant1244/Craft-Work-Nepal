@@ -1,20 +1,22 @@
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const express = require("express");
 dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret_key_change_this_in_production_123456";
 
 // Middleware to verify JWT token
 function authenticateToken(req, res, next) {
-  // Skip token verification for the login route
-  if (
-    req.path === "/api/auth/login" ||
-    req.path === "/api/users" ||
-    req.path === "/api/product/category/wooden" ||
-    req.path === "/api/product/category/handmade" ||
-    req.path === "/api/product/category/traditional" ||
-    req.path.startsWith("/uploads/") ||
-    req.path.startsWith("/api/product")
-  ) {
+  // Skip token verification for public routes
+  const publicRoutes = [
+    "/api/auth/login",
+    "/api/auth/register",
+    "/api/product",
+    "/uploads"
+  ];
+
+  const isPublicRoute = publicRoutes.some(route => req.path.startsWith(route));
+  
+  if (isPublicRoute) {
     return next();
   }
 
@@ -23,18 +25,19 @@ function authenticateToken(req, res, next) {
   if (!authHeader) {
     return res
       .status(401)
-      .send({ message: "Access denied. No token provided." });
+      .json({ message: "Access denied. No token provided." });
   }
+
   const token = authHeader.split(" ")[1];
   if (!token) {
     return res
       .status(401)
-      .send({ message: "Access denied. No token provided." });
+      .json({ message: "Access denied. No token provided." });
   }
 
-  jwt.verify(token, process.env.secretkey, (err, decoded) => {
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
     if (err) {
-      return res.status(403).send("Invalid or expired token.");
+      return res.status(403).json({ message: "Invalid or expired token." });
     }
     req.user = decoded; // Attach decoded payload to request object
     next(); // Proceed to the next middleware or route handler

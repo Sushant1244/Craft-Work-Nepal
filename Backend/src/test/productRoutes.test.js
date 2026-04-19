@@ -11,7 +11,6 @@ jest.mock("../models/category.js", () => ({
 }));
 
 const request = require("supertest");
-const express = require("express");
 let productRoutes;
 try {
   productRoutes = require("../route/product/productRoute.js").productRouter;
